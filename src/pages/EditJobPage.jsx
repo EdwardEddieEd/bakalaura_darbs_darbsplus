@@ -38,6 +38,10 @@ const EditJobPage = () => {
         if (!job.title || !job.description || !job.startDate || !job.endDate || !job.category || !job.location || !job.salary) {
             return false;
         }
+        if (new Date(job.endDate) < new Date(job.startDate)) {
+            alert("End date cannot be earlier than start date.");
+            return false;
+        }
         return true;
     };
 

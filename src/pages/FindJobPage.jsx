@@ -15,7 +15,7 @@ const FindJobPage = () => {
     const [showModal, setShowModal] = useState(false);
     const [contactInfo, setContactInfo] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
-    const [jobsPerPage] = useState(5);
+    const [jobsPerPage] = useState(6);
 
     useEffect(() => {
         dispatch(loadJobsFromFirebase());
@@ -128,57 +128,58 @@ const FindJobPage = () => {
             </div>
 
             {/* Job Listings */}
-            <div className="w-full max-w-2xl">
+            <div className="w-full px-4">
                 {currentJobs.length === 0 ? (
                     <p className="text-gray-300 text-center">No jobs available</p>
                 ) : (
-                    currentJobs.map((job) => (
-                        <div key={job.id} className="bg-gray-800 p-6 rounded-lg mb-6 hover:shadow-lg transition-transform transform hover:scale-105">
-                            <h3 className="text-2xl font-semibold text-white mb-2">{job.title}</h3>
-                            <p className="text-gray-300 mb-2 overflow-y-auto break-words">{job.description}</p>
+                    <div className="grid grid-cols-2 gap-x-10 gap-y-5">
+                        {currentJobs.map((job) => (
+                            <div key={job.id} className="bg-gray-800 p-6 rounded-lg mb-6 hover:shadow-lg transition-transform transform hover:scale-105">
+                                <h3 className="text-2xl font-semibold text-white mb-2">{job.title}</h3>
+                                <p className="text-gray-300 mb-2 overflow-y-auto break-words">{job.description}</p>
 
-                            <div className="flex gap-4 text-gray-400 mb-4">
-                                {/* Left Section: Date, Location, Salary */}
-                                <div className="flex-2">
-                                    <div className="flex items-center mb-4">
-                                        <FaCalendarAlt className="mr-2 text-blue-500" />
-                                        <span className="font-semibold">Start Date - End Date:</span> <span className="ml-2">{job.startDate} - {job.endDate}</span>
+                                <div className="flex gap-4 text-gray-400 mb-4">
+                                    {/* Left Section: Date, Location, Salary */}
+                                    <div className="flex-2">
+                                        <div className="flex items-center mb-4">
+                                            <FaCalendarAlt className="mr-2 text-blue-500" />
+                                            <span className="font-semibold">Start Date - End Date:</span> <span className="ml-2">{job.startDate} - {job.endDate}</span>
+                                        </div>
+                                        <div className="flex items-center mb-4">
+                                            <FaMapMarkerAlt className="mr-2 text-red-500" />
+                                            <span className="font-semibold">Location:</span> <span className="ml-2">{job.location}</span>
+                                        </div>
+                                        <div className="flex items-center mb-4">
+                                            <FaMoneyBillWave className="mr-2 text-green-500" />
+                                            <span className="font-semibold">Salary:</span> <span className="ml-2">{job.salary}</span>
+                                        </div>
                                     </div>
-                                    <div className="flex items-center mb-4">
-                                        <FaMapMarkerAlt className="mr-2 text-red-500" />
-                                        <span className="font-semibold">Location:</span> <span className="ml-2">{job.location}</span>
-                                    </div>
-                                    <div className="flex items-center mb-4">
-                                        <FaMoneyBillWave className="mr-2 text-green-500" />
-                                        <span className="font-semibold">Salary:</span> <span className="ml-2">{job.salary}</span>
-                                    </div>
-                                </div>
 
-                                {/* Right Section: Call Now and Send Email */}
-                                <div className="flex flex-col items-end flex-1">
-                                    {job.contactPhone && (
-                                        <button
-                                            onClick={() => handleShowContactInfo("phone", job.contactPhone)}
-                                            className="bg-green-600 text-white py-2 px-6 rounded-md hover:bg-green-500 mb-4"
-                                        >
-                                            <FaPhoneAlt className="mr-2" />
-                                            Call Now
-                                        </button>
-                                    )}
+                                    {/* Right Section: Call Now and Send Email */}
+                                    <div className="flex flex-col items-end flex-1">
+                                        {job.contactPhone && (
+                                            <button
+                                                onClick={() => handleShowContactInfo("phone", job.contactPhone)}
+                                                className="bg-green-600 text-white py-2 px-6 rounded-md hover:bg-green-500 mb-4"
+                                            >
+                                                <FaPhoneAlt className="mr-2" />
+                                                Call Now
+                                            </button>
+                                        )}
 
-                                    {job.createdBy && (
-                                        <button
-                                            onClick={() => handleShowContactInfo("email", job.createdBy)}
-                                            className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-500"
-                                        >
-                                            <FaEnvelope className="mr-2" />
-                                            Send Email
-                                        </button>
-                                    )}
+                                        {job.createdBy && (
+                                            <button
+                                                onClick={() => handleShowContactInfo("email", job.createdBy)}
+                                                className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-500"
+                                            >
+                                                <FaEnvelope className="mr-2" />
+                                                Send Email
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    ))
+                        ))} </div>
                 )}
             </div>
 

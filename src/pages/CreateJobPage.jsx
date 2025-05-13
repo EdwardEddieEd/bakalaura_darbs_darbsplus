@@ -23,6 +23,10 @@ const CreateJobPage = () => {
         if (!title || !description || !startDate || !endDate || !category || !location || !salary) {
             return false;
         }
+        if (new Date(endDate) < new Date(startDate)) {
+            alert("End date cannot be earlier than start date.");
+            return false;
+        }
         return true;
     };
 

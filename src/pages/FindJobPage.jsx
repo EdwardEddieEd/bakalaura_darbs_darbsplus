@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { loadJobsFromFirebase } from "../store/slices/firebaseSlice";
-import { FaMapMarkerAlt, FaMoneyBillWave, FaUser, FaCalendarAlt, FaPhoneAlt, FaEnvelope } from 'react-icons/fa';
+import { FaMapMarkerAlt, FaMoneyBillWave, FaCalendarAlt, FaPhoneAlt, FaEnvelope } from 'react-icons/fa';
 
 
 const FindJobPage = () => {
@@ -10,7 +10,8 @@ const FindJobPage = () => {
     const { jobs, error } = useSelector((state) => state.firebase);
     const [searchLocation, setSearchLocation] = useState("");
     const [searchCategory, setSearchCategory] = useState("");
-    const [searchSalary, setSearchSalary] = useState("");
+    const [minSalary, setMinSalary] = useState("");
+    const [maxSalary, setMaxSalary] = useState("");
     const [showModal, setShowModal] = useState(false);
     const [contactInfo, setContactInfo] = useState("");
 
@@ -23,7 +24,8 @@ const FindJobPage = () => {
         return (
             (searchLocation === "" || job.location === searchLocation) &&
             (searchCategory === "" || job.category === searchCategory) &&
-            (searchSalary === "" || parseInt(job.salary) >= parseInt(searchSalary))
+            (minSalary === "" || parseInt(job.salary) >= parseInt(minSalary)) &&
+            (maxSalary === "" || parseInt(job.salary) <= parseInt(maxSalary))
         );
     });
 
@@ -74,6 +76,9 @@ const FindJobPage = () => {
                     <option value="Jurmala">Jurmala</option>
                     <option value="Ventspils">Ventspils</option>
                     <option value="Rezekne">Rezekne</option>
+                    <option value="Ogre">Ogre</option>
+                    <option value="Valmiera">Valmiera</option>
+                    <option value="Jūrmala">Jūrmala</option>
                 </select>
 
                 <select
@@ -86,13 +91,23 @@ const FindJobPage = () => {
                     <option value="On-site">On-site</option>
                 </select>
 
-                <input
-                    type="number"
-                    placeholder="Minimal salary (€)"
-                    value={searchSalary}
-                    onChange={(e) => setSearchSalary(e.target.value)}
-                    className="p-2 rounded-md text-black"
-                />
+                {/* Salary */}
+                <div className="flex space-x-4">
+                    <input
+                        type="number"
+                        placeholder="Min salary (€)"
+                        value={minSalary}
+                        onChange={(e) => setMinSalary(e.target.value)}
+                        className="p-2 rounded-md text-black w-full"
+                    />
+                    <input
+                        type="number"
+                        placeholder="Max salary (€)"
+                        value={maxSalary}
+                        onChange={(e) => setMaxSalary(e.target.value)}
+                        className="p-2 rounded-md text-black w-full"
+                    />
+                </div>
             </div>
 
             {/* Job Listings */}

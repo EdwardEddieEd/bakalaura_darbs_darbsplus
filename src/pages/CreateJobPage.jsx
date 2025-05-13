@@ -181,6 +181,9 @@ const CreateJobPage = () => {
                             <option value="Jurmala">Jurmala</option>
                             <option value="Ventspils">Ventspils</option>
                             <option value="Rezekne">Rezekne</option>
+                            <option value="Ogre">Ogre</option>
+                            <option value="Valmiera">Valmiera</option>
+                            <option value="Jūrmala">Jūrmala</option>
                         </select>
                     </div>
 

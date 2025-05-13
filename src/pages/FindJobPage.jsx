@@ -14,6 +14,8 @@ const FindJobPage = () => {
     const [maxSalary, setMaxSalary] = useState("");
     const [showModal, setShowModal] = useState(false);
     const [contactInfo, setContactInfo] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
+    const [jobsPerPage] = useState(5);
 
     useEffect(() => {
         dispatch(loadJobsFromFirebase());
@@ -28,6 +30,21 @@ const FindJobPage = () => {
             (maxSalary === "" || parseInt(job.salary) <= parseInt(maxSalary))
         );
     });
+
+    // Pagination
+    const indexOfLastJob = currentPage * jobsPerPage;
+    const indexOfFirstJob = indexOfLastJob - jobsPerPage;
+    const currentJobs = filteredJobs.slice(indexOfFirstJob, indexOfLastJob);
+    const totalPages = Math.ceil(filteredJobs.length / jobsPerPage);
+
+    const goToPage = (pageNumber) => {
+        if (pageNumber < 1 || pageNumber > totalPages) return;
+        setCurrentPage(pageNumber);
+    };
+
+    if (error) {
+        return <div className="text-center text-red-500">Error: {error}</div>;
+    }
 
     const handleShowContactInfo = (infoType, infoValue) => {
         setContactInfo({ type: infoType, value: infoValue });
@@ -112,10 +129,10 @@ const FindJobPage = () => {
 
             {/* Job Listings */}
             <div className="w-full max-w-2xl">
-                {filteredJobs.length === 0 ? (
+                {currentJobs.length === 0 ? (
                     <p className="text-gray-300 text-center">No jobs available</p>
                 ) : (
-                    filteredJobs.map((job) => (
+                    currentJobs.map((job) => (
                         <div key={job.id} className="bg-gray-800 p-6 rounded-lg mb-6 hover:shadow-lg transition-transform transform hover:scale-105">
                             <h3 className="text-2xl font-semibold text-white mb-2">{job.title}</h3>
                             <p className="text-gray-300 mb-2 overflow-y-auto break-words">{job.description}</p>
@@ -138,7 +155,7 @@ const FindJobPage = () => {
                                 </div>
 
                                 {/* Right Section: Call Now and Send Email */}
-                                <div className="flex flex-col items-end flex-1"> {/* Эта секция займет 1/3 ширины */}
+                                <div className="flex flex-col items-end flex-1">
                                     {job.contactPhone && (
                                         <button
                                             onClick={() => handleShowContactInfo("phone", job.contactPhone)}
@@ -160,8 +177,6 @@ const FindJobPage = () => {
                                     )}
                                 </div>
                             </div>
-
-
                         </div>
                     ))
                 )}
@@ -188,6 +203,41 @@ const FindJobPage = () => {
                     </div>
                 </div>
             )}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+                <div className="flex justify-center items-center gap-2 mt-4">
+                    <button
+                        onClick={() => goToPage(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="bg-gray-700 px-3 py-1 rounded text-white disabled:opacity-50"
+                    >
+                        Back
+                    </button>
+
+                    {Array.from({ length: totalPages }, (_, index) => (
+                        <button
+                            key={index + 1}
+                            onClick={() => goToPage(index + 1)}
+                            className={`px-3 py-1 rounded ${currentPage === index + 1
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-gray-700 text-gray-300'
+                                }`}
+                        >
+                            {index + 1}
+                        </button>
+                    ))}
+
+                    <button
+                        onClick={() => goToPage(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className="bg-gray-700 px-3 py-1 rounded text-white disabled:opacity-50"
+                    >
+                        Next
+                    </button>
+                </div>
+            )}
+
         </div>
     );
 };

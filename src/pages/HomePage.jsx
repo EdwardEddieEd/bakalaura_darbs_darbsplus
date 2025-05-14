@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 
 const HomePage = () => {
     const dispatch = useDispatch();
-    const { isAuth, email } = useAuth();
+    const { isAuth, email, role } = useAuth();
 
     return isAuth ? (
         <div className="w-full min-h-screen flex flex-col items-center bg-gray-900 text-white p-6 relative">
@@ -14,6 +14,11 @@ const HomePage = () => {
                 <h2 className="text-3xl font-bold text-center mb-6 text-gray-200">Darbs+</h2>
                 <h2 className="text-xl text-center mb-6 text-gray-400">Welcome, {email}</h2>
 
+                {role === 'admin' && (
+                    <Link to="/admin" className="text-green-400 hover:text-green-300 text-xl transition">
+                        Manage users
+                    </Link>
+                )}
             </div>
 
             <div className="absolute top-4 right-4 space-x-4 z-10 flex items-center">
@@ -39,6 +44,7 @@ const HomePage = () => {
                     <Link to="/createjob" className="text-blue-400 hover:text-blue-300 text-xl transition">
                         Create a new short-time job
                     </Link>
+
                 </div>
             </div>
         </div>

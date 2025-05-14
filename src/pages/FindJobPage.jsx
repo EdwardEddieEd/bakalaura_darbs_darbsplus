@@ -45,7 +45,7 @@ const FindJobPage = () => {
     if (error) {
         return <div className="text-center text-red-500">Error: {error}</div>;
     }
-
+    // modal 
     const handleShowContactInfo = (infoType, infoValue) => {
         setContactInfo({ type: infoType, value: infoValue });
         setShowModal(true);

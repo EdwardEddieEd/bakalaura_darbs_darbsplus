@@ -3,25 +3,34 @@ import { Form } from './Form';
 import { setUser } from 'store/slices/userSlice';
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { useNavigate } from 'react-router-dom';
+import { getDatabase, ref, set } from "firebase/database";
 
 import React from 'react'
 
 const Registration = () => {
     const dispatch = useDispatch();
-
     const navigate = useNavigate();
 
-    const registrationClick = (email, password) => {
+    const registrationClick = (email, password, role = 'user') => {
         const auth = getAuth();
+        const db = getDatabase();
+
         createUserWithEmailAndPassword(auth, email, password)
             .then(({ user }) => {
-                console.log(user);
-                dispatch(setUser({
+                set(ref(db, 'users/' + user.uid), {
                     email: user.email,
-                    id: user.uid,
-                    token: user.accessToken,
-                }));
-                navigate('/login');
+                    role: role,
+                })
+                    .then(() => {
+                        console.log("User role has been saved");
+                        dispatch(setUser({
+                            email: user.email,
+                            id: user.uid,
+                            token: user.accessToken,
+                        }));
+                        navigate('/login');
+                    })
+                    .catch(console.error)
             })
             .catch(console.error)
     }

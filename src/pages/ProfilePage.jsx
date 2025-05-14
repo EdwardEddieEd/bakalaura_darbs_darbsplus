@@ -7,7 +7,7 @@ import PasswordChanger from '../pages/PasswordChanger';
 import { FaMapMarkerAlt, FaMoneyBillWave, FaCalendarAlt, FaPhoneAlt, FaEnvelope } from 'react-icons/fa';
 
 const ProfilePage = () => {
-    const { email, id } = useAuth();
+    const { email, id, role } = useAuth();
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const { jobs } = useSelector(state => state.firebase);
@@ -49,6 +49,7 @@ const ProfilePage = () => {
                     <h3 className="text-xl font-semibold text-white">User Info</h3>
                     <p className="text-gray-300">Email: {email}</p>
                     <p className="text-gray-300">User ID: {id}</p>
+                    <p className="text-gray-300">User Role: {role}</p>
                     <button
                         onClick={() => handlePasswordModal(true)}
                         className="bg-blue-600 text-white py-2 px-3 rounded-md hover:bg-blue-500"

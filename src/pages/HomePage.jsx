@@ -10,12 +10,19 @@ const HomePage = () => {
 
     return isAuth ? (
         <div className="w-full min-h-screen flex flex-col items-center bg-gray-900 text-white p-6 relative">
-            <div className="w-full max-w-md bg-gray-800 shadow-lg rounded-xl p-8 mt-[175px]">
-                <h2 className="text-3xl font-bold text-center mb-6 text-gray-200">Darbs+</h2>
-                <h2 className="text-xl text-center mb-6 text-gray-400">Welcome, {email}</h2>
+            <div className="w-full max-w-md bg-gray-800 shadow-2xl rounded-2xl p-10 mt-[175px] transition-all duration-300">
+                <h2 className="text-4xl font-extrabold text-center mb-4 text-white tracking-wide">
+                    Darbs+
+                </h2>
+                <h3 className="text-lg text-center mb-8 text-gray-400">
+                    Welcome, {email}
+                </h3>
 
                 {role === 'admin' && (
-                    <Link to="/admin" className="text-green-400 hover:text-green-300 text-xl transition">
+                    <Link
+                        to="/admin"
+                        className="block text-center text-green-400 hover:text-green-300 text-xl font-medium transition-colors duration-200"
+                    >
                         Manage users
                     </Link>
                 )}

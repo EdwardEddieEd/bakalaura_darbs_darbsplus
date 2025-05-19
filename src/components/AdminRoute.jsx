@@ -5,7 +5,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     const { isAuth, role } = useAuth();
 
     if (role === null) {
-        return <div className="text-white p-6">Checking access...</div>;
+        return <div className="text-white p-6">Acces deniend</div>;
     }
 
     if (!isAuth) return <Navigate to="/login" />;

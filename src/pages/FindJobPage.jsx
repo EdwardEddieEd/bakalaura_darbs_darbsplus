@@ -2,12 +2,15 @@ import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { loadJobsFromFirebase } from "../store/slices/firebaseSlice";
-import { FaMapMarkerAlt, FaMoneyBillWave, FaCalendarAlt, FaPhoneAlt, FaEnvelope } from 'react-icons/fa';
+import { FaMapMarkerAlt, FaMoneyBillWave, FaCalendarAlt, FaPhoneAlt, FaEnvelope, FaTrash } from 'react-icons/fa';
+import { getAuth } from "firebase/auth";
+import { get, getDatabase, ref, remove } from "firebase/database";
 
 
 const FindJobPage = () => {
     const dispatch = useDispatch();
     const { jobs, error } = useSelector((state) => state.firebase);
+    const [searchTitle, setSearchTitle] = useState("");
     const [searchLocation, setSearchLocation] = useState("");
     const [searchCategory, setSearchCategory] = useState("");
     const [minSalary, setMinSalary] = useState("");
@@ -17,13 +20,36 @@ const FindJobPage = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [jobsPerPage] = useState(6);
 
+    const [currentUserRole, setCurrentUserRole] = useState(null);
+
     useEffect(() => {
         dispatch(loadJobsFromFirebase());
+        const auth = getAuth();
+        const user = auth.currentUser;
+
+        if (user) {
+            const db = getDatabase();
+            const roleRef = ref(db, `users/${user.uid}/role`);
+
+            get(roleRef)
+                .then((snapshot) => {
+                    if (snapshot.exists()) {
+                        setCurrentUserRole(snapshot.val());
+                    } else {
+                        setCurrentUserRole("user");
+                    }
+                })
+                .catch((error) => {
+                    console.error("Failed to fetch user role:", error);
+                    setCurrentUserRole("user");
+                });
+        }
     }, [dispatch]);
 
     // Filtresana
     const filteredJobs = jobs.filter((job) => {
         return (
+            (searchTitle === "" || job.title.toLowerCase().includes(searchTitle.toLowerCase())) &&
             (searchLocation === "" || job.location === searchLocation) &&
             (searchCategory === "" || job.category === searchCategory) &&
             (minSalary === "" || parseInt(job.salary) >= parseInt(minSalary)) &&
@@ -42,9 +68,24 @@ const FindJobPage = () => {
         setCurrentPage(pageNumber);
     };
 
-    if (error) {
-        return <div className="text-center text-red-500">Error: {error}</div>;
-    }
+    // delete job (admin)
+    const handleDeleteJob = async (jobId) => {
+        if (currentUserRole !== "admin") {
+            alert("Only admins can delete jobs.");
+            return;
+        }
+
+        try {
+            const db = getDatabase();
+            await remove(ref(db, `jobs/${jobId}`));
+            alert("Job deleted successfully.");
+            dispatch(loadJobsFromFirebase());
+        } catch (error) {
+            alert("Failed to delete job: " + error.message);
+        }
+    };
+
+
     // modal 
     const handleShowContactInfo = (infoType, infoValue) => {
         setContactInfo({ type: infoType, value: infoValue });
@@ -80,6 +121,14 @@ const FindJobPage = () => {
 
             {/* Filters */}
             <div className="w-full max-w-2xl bg-gray-800 p-4 rounded-lg mb-6 flex flex-col gap-4">
+                <input
+                    type="text"
+                    placeholder="Search by job title"
+                    value={searchTitle}
+                    onChange={(e) => setSearchTitle(e.target.value)}
+                    className="p-2 rounded-md text-black"
+                />
+
                 <select
                     value={searchLocation}
                     onChange={(e) => setSearchLocation(e.target.value)}
@@ -178,6 +227,15 @@ const FindJobPage = () => {
                                         )}
                                     </div>
                                 </div>
+                                {currentUserRole === "admin" && (
+                                    <button
+                                        onClick={() => handleDeleteJob(job.id)}
+                                        className="absolute top-2 right-2 bg-red-600 hover:bg-red-500 text-white rounded p-2"
+                                        title="Delete Job"
+                                    >
+                                        <FaTrash />
+                                    </button>
+                                )}
                             </div>
                         ))} </div>
                 )}

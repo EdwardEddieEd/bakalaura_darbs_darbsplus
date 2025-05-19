@@ -3,7 +3,7 @@ import { useDispatch } from 'react-redux';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ref, get, update } from "firebase/database";
 import { database } from '../firebase';
-import { loadJobsFromFirebase } from 'store/slices/firebaseSlice';
+import { loadFilteredJobsFromFirebase } from 'store/slices/firebaseSlice';
 
 const EditJobPage = () => {
     const { id } = useParams();
@@ -58,7 +58,7 @@ const EditJobPage = () => {
         try {
             const jobRef = ref(database, `jobs/${id}`);
             await update(jobRef, job);
-            dispatch(loadJobsFromFirebase());
+            dispatch(loadFilteredJobsFromFirebase());
 
             navigate('/profile');
         } catch (error) {

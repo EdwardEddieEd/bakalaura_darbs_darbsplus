@@ -1,74 +1,70 @@
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { loadJobsFromFirebase } from "../store/slices/firebaseSlice";
+import { loadFilteredJobsFromFirebase, deleteJobFromFirebase } from "../store/slices/firebaseSlice";
 import { FaMapMarkerAlt, FaMoneyBillWave, FaCalendarAlt, FaPhoneAlt, FaEnvelope, FaTrash } from 'react-icons/fa';
 import { getAuth } from "firebase/auth";
-import { get, getDatabase, ref, remove } from "firebase/database";
-
 
 const FindJobPage = () => {
     const dispatch = useDispatch();
-    const { jobs, error } = useSelector((state) => state.firebase);
+    const { jobs, error, loading, totalCount } = useSelector((state) => state.firebase);
+
     const [searchTitle, setSearchTitle] = useState("");
     const [searchLocation, setSearchLocation] = useState("");
     const [searchCategory, setSearchCategory] = useState("");
+
     const [minSalary, setMinSalary] = useState("");
     const [maxSalary, setMaxSalary] = useState("");
+
     const [showModal, setShowModal] = useState(false);
     const [contactInfo, setContactInfo] = useState("");
+
     const [currentPage, setCurrentPage] = useState(1);
     const [jobsPerPage] = useState(6);
 
     const [currentUserRole, setCurrentUserRole] = useState(null);
 
     useEffect(() => {
-        dispatch(loadJobsFromFirebase());
         const auth = getAuth();
         const user = auth.currentUser;
 
         if (user) {
-            const db = getDatabase();
-            const roleRef = ref(db, `users/${user.uid}/role`);
-
-            get(roleRef)
-                .then((snapshot) => {
-                    if (snapshot.exists()) {
-                        setCurrentUserRole(snapshot.val());
-                    } else {
-                        setCurrentUserRole("user");
-                    }
-                })
-                .catch((error) => {
-                    console.error("Failed to fetch user role:", error);
-                    setCurrentUserRole("user");
-                });
+            import("firebase/database").then(({ getDatabase, ref, get }) => {
+                const db = getDatabase();
+                const roleRef = ref(db, `users/${user.uid}/role`);
+                get(roleRef)
+                    .then((snapshot) => {
+                        if (snapshot.exists()) {
+                            setCurrentUserRole(snapshot.val());
+                        } else {
+                            setCurrentUserRole("user");
+                        }
+                    })
+                    .catch(() => setCurrentUserRole("user"));
+            });
         }
-    }, [dispatch]);
+    }, []);
 
-    // Filtresana
-    const filteredJobs = jobs.filter((job) => {
-        return (
-            (searchTitle === "" || job.title.toLowerCase().includes(searchTitle.toLowerCase())) &&
-            (searchLocation === "" || job.location === searchLocation) &&
-            (searchCategory === "" || job.category === searchCategory) &&
-            (minSalary === "" || parseInt(job.salary) >= parseInt(minSalary)) &&
-            (maxSalary === "" || parseInt(job.salary) <= parseInt(maxSalary))
-        );
-    });
+    // load jobs with filer for page
+    useEffect(() => {
+        dispatch(loadFilteredJobsFromFirebase({
+            title: searchTitle,
+            location: searchLocation,
+            category: searchCategory,
+            minSalary,
+            maxSalary,
+            page: currentPage,
+            limit: jobsPerPage,
+        }));
+    }, [dispatch, searchTitle, searchLocation, searchCategory, minSalary, maxSalary, currentPage]);
 
-    // Pagination
-    const indexOfLastJob = currentPage * jobsPerPage;
-    const indexOfFirstJob = indexOfLastJob - jobsPerPage;
-    const currentJobs = filteredJobs.slice(indexOfFirstJob, indexOfLastJob);
-    const totalPages = Math.ceil(filteredJobs.length / jobsPerPage);
+    const totalPages = Math.ceil(totalCount / jobsPerPage);
 
     const goToPage = (pageNumber) => {
         if (pageNumber < 1 || pageNumber > totalPages) return;
         setCurrentPage(pageNumber);
     };
-
-    // delete job (admin)
+    //delete 
     const handleDeleteJob = async (jobId) => {
         if (currentUserRole !== "admin") {
             alert("Only admins can delete jobs.");
@@ -76,17 +72,24 @@ const FindJobPage = () => {
         }
 
         try {
-            const db = getDatabase();
-            await remove(ref(db, `jobs/${jobId}`));
+            await dispatch(deleteJobFromFirebase(jobId)).unwrap();
             alert("Job deleted successfully.");
-            dispatch(loadJobsFromFirebase());
+            // refresh page when delete some job
+            dispatch(loadFilteredJobsFromFirebase({
+                title: searchTitle,
+                location: searchLocation,
+                category: searchCategory,
+                minSalary,
+                maxSalary,
+                page: currentPage,
+                limit: jobsPerPage,
+            }));
+
         } catch (error) {
-            alert("Failed to delete job: " + error.message);
+            alert("Failed to delete job: " + error);
         }
     };
-
-
-    // modal 
+    //modal
     const handleShowContactInfo = (infoType, infoValue) => {
         setContactInfo({ type: infoType, value: infoValue });
         setShowModal(true);
@@ -96,9 +99,7 @@ const FindJobPage = () => {
         setShowModal(false);
     };
 
-    if (error) {
-        return <div className="text-center text-red-500">Error: {error}</div>;
-    }
+    if (error) return <div className="text-center text-red-500">Error: {error}</div>;
 
     return (
         <div className="w-full min-h-screen bg-gray-900 text-white flex flex-col items-center p-6">
@@ -125,13 +126,13 @@ const FindJobPage = () => {
                     type="text"
                     placeholder="Search by job title"
                     value={searchTitle}
-                    onChange={(e) => setSearchTitle(e.target.value)}
+                    onChange={(e) => { setSearchTitle(e.target.value); setCurrentPage(1); }}
                     className="p-2 rounded-md text-black"
                 />
 
                 <select
                     value={searchLocation}
-                    onChange={(e) => setSearchLocation(e.target.value)}
+                    onChange={(e) => { setSearchLocation(e.target.value); setCurrentPage(1); }}
                     className="p-2 rounded-md text-black"
                 >
                     <option value="">Select town</option>
@@ -149,7 +150,7 @@ const FindJobPage = () => {
 
                 <select
                     value={searchCategory}
-                    onChange={(e) => setSearchCategory(e.target.value)}
+                    onChange={(e) => { setSearchCategory(e.target.value); setCurrentPage(1); }}
                     className="p-2 rounded-md text-black"
                 >
                     <option value="">Select type of job</option>
@@ -163,14 +164,14 @@ const FindJobPage = () => {
                         type="number"
                         placeholder="Min salary (€)"
                         value={minSalary}
-                        onChange={(e) => setMinSalary(e.target.value)}
+                        onChange={(e) => { setMinSalary(e.target.value); setCurrentPage(1); }}
                         className="p-2 rounded-md text-black w-full"
                     />
                     <input
                         type="number"
                         placeholder="Max salary (€)"
                         value={maxSalary}
-                        onChange={(e) => setMaxSalary(e.target.value)}
+                        onChange={(e) => { setMaxSalary(e.target.value); setCurrentPage(1); }}
                         className="p-2 rounded-md text-black w-full"
                     />
                 </div>
@@ -178,17 +179,21 @@ const FindJobPage = () => {
 
             {/* Job Listings */}
             <div className="w-full px-4">
-                {currentJobs.length === 0 ? (
+                {loading && <p className="text-center">Loading...</p>}
+
+                {!loading && jobs.length === 0 && (
                     <p className="text-gray-300 text-center">No jobs available</p>
-                ) : (
+                )}
+
+                {!loading && jobs.length > 0 && (
                     <div className="grid grid-cols-2 gap-x-10 gap-y-5">
-                        {currentJobs.map((job) => (
-                            <div key={job.id} className="bg-gray-800 p-6 rounded-lg mb-6 hover:shadow-lg transition-transform transform hover:scale-105">
+                        {jobs.map((job) => (
+                            <div key={job.id} className="bg-gray-800 p-6 rounded-lg mb-6 hover:shadow-lg transition-transform transform hover:scale-105 relative">
                                 <h3 className="text-2xl font-semibold text-white mb-2">{job.title}</h3>
                                 <p className="text-gray-300 mb-2 overflow-y-auto break-words">{job.description}</p>
 
                                 <div className="flex gap-4 text-gray-400 mb-4">
-                                    {/* Left Section: Date, Location, Salary */}
+                                    {/* Left Section */}
                                     <div className="flex-2">
                                         <div className="flex items-center mb-4">
                                             <FaCalendarAlt className="mr-2 text-blue-500" />
@@ -204,7 +209,7 @@ const FindJobPage = () => {
                                         </div>
                                     </div>
 
-                                    {/* Right Section: Call Now and Send Email */}
+                                    {/* Right Section */}
                                     <div className="flex flex-col items-end flex-1">
                                         {job.contactPhone && (
                                             <button
@@ -227,6 +232,8 @@ const FindJobPage = () => {
                                         )}
                                     </div>
                                 </div>
+
+                                {/* Delete button */}
                                 {currentUserRole === "admin" && (
                                     <button
                                         onClick={() => handleDeleteJob(job.id)}
@@ -264,39 +271,33 @@ const FindJobPage = () => {
             )}
 
             {/* Pagination */}
-            {totalPages > 1 && (
-                <div className="flex justify-center items-center gap-2 mt-4">
+            <div className="flex justify-center space-x-2 mt-8">
+                <button
+                    onClick={() => goToPage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="bg-gray-700 text-white py-2 px-4 rounded disabled:opacity-50"
+                >
+                    Prev
+                </button>
+
+                {[...Array(totalPages)].map((_, idx) => (
                     <button
-                        onClick={() => goToPage(currentPage - 1)}
-                        disabled={currentPage === 1}
-                        className="bg-gray-700 px-3 py-1 rounded text-white disabled:opacity-50"
+                        key={idx}
+                        onClick={() => goToPage(idx + 1)}
+                        className={`py-2 px-4 rounded ${currentPage === idx + 1 ? "bg-blue-600 text-white" : "bg-gray-700 text-white"}`}
                     >
-                        Back
+                        {idx + 1}
                     </button>
+                ))}
 
-                    {Array.from({ length: totalPages }, (_, index) => (
-                        <button
-                            key={index + 1}
-                            onClick={() => goToPage(index + 1)}
-                            className={`px-3 py-1 rounded ${currentPage === index + 1
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-gray-700 text-gray-300'
-                                }`}
-                        >
-                            {index + 1}
-                        </button>
-                    ))}
-
-                    <button
-                        onClick={() => goToPage(currentPage + 1)}
-                        disabled={currentPage === totalPages}
-                        className="bg-gray-700 px-3 py-1 rounded text-white disabled:opacity-50"
-                    >
-                        Next
-                    </button>
-                </div>
-            )}
-
+                <button
+                    onClick={() => goToPage(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="bg-gray-700 text-white py-2 px-4 rounded disabled:opacity-50"
+                >
+                    Next
+                </button>
+            </div>
         </div>
     );
 };

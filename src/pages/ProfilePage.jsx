@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
-import { deleteJobFromFirebase, loadJobsFromFirebase } from '../store/slices/firebaseSlice';
+import { deleteJobFromFirebase, loadFilteredJobsFromFirebase } from '../store/slices/firebaseSlice';
 import { useAuth } from "hooks/auth-status";
 import PasswordChanger from '../pages/PasswordChanger';
 import { FaMapMarkerAlt, FaMoneyBillWave, FaCalendarAlt, FaPhoneAlt, FaEnvelope } from 'react-icons/fa';
@@ -14,7 +14,7 @@ const ProfilePage = () => {
     const [showPasswordModal, setShowPasswordModal] = useState(false);
 
     useEffect(() => {
-        dispatch(loadJobsFromFirebase());
+        dispatch(loadFilteredJobsFromFirebase());
     }, [dispatch]);
 
     const myJobs = jobs.filter(job => job.userId === id);
